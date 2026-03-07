@@ -1,15 +1,26 @@
+import config.ServerEnv;
+
 void main() {
-    IO.println("Logs from your program will appear here!");
-
     try {
-        ServerSocket serverSocket = new ServerSocket(4221);
-        serverSocket.setReuseAddress(true);
+        ServerSocket serverSocket = new ServerSocket(ServerEnv.PORT);
+        IO.println("Server listening to port: " + ServerEnv.PORT);
+        serverSocket.setReuseAddress(ServerEnv.CAN_REUSE_ADDRESS);
 
-        Socket accept = serverSocket.accept();
+        Socket client = serverSocket.accept();
+        IO.println("Accepted new connection");
 
-        accept.getOutputStream().write("HTTP/1.1 200 OK\r\n\r\n".getBytes());
+        BufferedReader clientReader = new BufferedReader(
+                new InputStreamReader(
+                        client.getInputStream()
+                )
+        );
 
-        IO.println("accepted new connection");
+        String clientMessage = clientReader.readLine();
+        String[] messageContent = clientMessage.split(" ");
+        String status = messageContent[1].equals("/") ? "200 OK" : "404 Not Found";
+        String response = "HTTP/1.1 " + status + "\r\n\r\n";
+
+        client.getOutputStream().write(response.getBytes());
     } catch (IOException e) {
         IO.println("IOException: " + e.getMessage());
     }
