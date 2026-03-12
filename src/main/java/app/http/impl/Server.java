@@ -67,7 +67,7 @@ public class Server implements Http {
 
     @Override
     public void handleClientRequest(HttpCall call, Socket client) throws ServerException {
-        String[] path = call.request().endpoint().split("/");
+        String[] path = call.request().getEndpoint().split("/");
 
         ResponseCode code;
         ContentType contentType = null;
@@ -85,7 +85,7 @@ public class Server implements Http {
         }
 
         HttpResponse httpResponse = new HttpResponse(
-                call.request().httpVersion(),
+                call.request().getHttpVersion(),
                 code,
                 contentType,
                 contentLength,
