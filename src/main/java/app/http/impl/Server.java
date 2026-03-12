@@ -92,7 +92,10 @@ public class Server implements Http {
                     body = path[2];
                     contentLength = body.getBytes().length;
                 }
-                default -> code = ResponseCode.NOT_FOUND;
+                default -> {
+                    code = ResponseCode.NOT_FOUND;
+                    contentType = ContentType.NONE;
+                }
             }
         }
 
