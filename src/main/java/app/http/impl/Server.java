@@ -20,11 +20,10 @@ import java.net.Socket;
 
 public class Server implements Http {
     @Override
-    public ServerSocket initServerSocket() throws ServerException {
-        try(ServerSocket serverSocket = new ServerSocket(ServerEnv.PORT)) {
+    public ServerSocket initServerSocket(ServerSocket serverSocket) throws ServerException {
+        try {
             IO.println("Server listening to port: " + ServerEnv.PORT);
             serverSocket.setReuseAddress(ServerEnv.CAN_REUSE_ADDRESS);
-
             return serverSocket;
         } catch (IOException e) {
             throw new ServerException("Failed to init socket: " + e.getMessage(), Severity.HIGH);
