@@ -54,7 +54,13 @@ public class Server implements Http {
             String[] request = clientMessage.split("\r\n");
 
             String[] requestLine = request[0].split(" ");
-            String[] headerLine = new String[] { request[1], request[2], request[3] };
+            String[] headerLine;
+            if(request.length > 1) {
+                 headerLine = new String[] { request[1], request[2], request[3] };
+            }
+            else {
+                headerLine = new String[] { null, null, null };
+            }
 
             return new HttpCall(
                     new Request(HttpMethod.valueOf(requestLine[0]), requestLine[1], requestLine[2]),
@@ -67,25 +73,31 @@ public class Server implements Http {
 
     @Override
     public void handleClientRequest(HttpCall call, Socket client) throws ServerException {
-        String[] path = call.request().getEndpoint().split("/");
-
         ResponseCode code;
         ContentType contentType = null;
         int contentLength = 0;
         String body = null;
-        switch (path[0]) {
-            case "" -> code = ResponseCode.OK;
-            case "echo" -> {
-                code = ResponseCode.OK;
-                contentType = ContentType.TEXT_PLAIN;
-                body = path[1];
-                contentLength = body.getBytes().length;
+
+        String[] path = call.request().endpoint().split("/");
+
+        if(path.length == 0) {
+            code = ResponseCode.OK;
+            contentType = ContentType.NONE;
+        }
+        else {
+            switch (path[1]) {
+                case "echo" -> {
+                    code = ResponseCode.OK;
+                    contentType = ContentType.TEXT_PLAIN;
+                    body = path[2];
+                    contentLength = body.getBytes().length;
+                }
+                default -> code = ResponseCode.NOT_FOUND;
             }
-            default -> code = ResponseCode.NOT_FOUND;
         }
 
         HttpResponse httpResponse = new HttpResponse(
-                call.request().getHttpVersion(),
+                call.request().httpVersion(),
                 code,
                 contentType,
                 contentLength,
