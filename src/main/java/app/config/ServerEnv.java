@@ -1,4 +1,4 @@
-package config;
+package app.config;
 
 public class ServerEnv {
     private ServerEnv() {
