@@ -48,19 +48,33 @@ public class Server implements Http {
         try {
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-            List<String> lines = new ArrayList<>();
+            String host = null;
+            String acceptMediaType = null;
+            String userAgent = null;
+            String request = null;
             for (int i = 0; i < 4; i++) {
                 String s = clientReader.readLine();
-                lines.add(s);
+
+                if(s.startsWith("Host: ")) {
+                    host = s.split(": ")[1];
+                }
+                else if (s.startsWith("Accept: ")) {
+                    acceptMediaType = s.split(": ")[1];
+                }
+                else if (s.startsWith("User-Agent: ")) {
+                    userAgent = s.split(": ")[1];
+                }
+                else {
+                    request = s;
+                }
             }
 
-            IO.println(lines);
-
-            String[] requestLine = lines.get(0).split(" ");
+            assert request != null;
+            String[] requestLine = request.split(" ");
 
             return new HttpCall(
                     new Request(HttpMethod.valueOf(requestLine[0]), requestLine[1], requestLine[2]),
-                    new Header(lines.get(1), lines.get(2), lines.get(3).split(": ")[1])
+                    new Header(host, acceptMediaType, userAgent)
             );
         } catch (IOException e) {
             throw new ServerException("Failed to parse client request: " + e.getMessage(), Severity.LOW);
