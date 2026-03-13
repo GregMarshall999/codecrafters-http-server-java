@@ -53,7 +53,7 @@ public class Server implements Http {
             String acceptMediaType = null;
             String userAgent = null;
             String request = null;
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 10; i++) {
                 String s = clientReader.readLine();
 
                 if(s.startsWith("Host: ")) {
@@ -65,7 +65,7 @@ public class Server implements Http {
                 else if (s.startsWith("User-Agent: ")) {
                     userAgent = s.split(": ")[1];
                 }
-                else {
+                else if(s.contains("HTTP")) {
                     request = s;
                 }
             }
