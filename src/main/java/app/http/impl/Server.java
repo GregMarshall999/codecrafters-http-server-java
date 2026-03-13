@@ -17,7 +17,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Objects;
 
 public class Server implements Http {
     @Override
@@ -52,21 +51,18 @@ public class Server implements Http {
             String acceptMediaType = null;
             String userAgent = null;
             String request = null;
-            // README!!!
-            // For some reason if the Reader tries to read anything after the empty string, we get an infinite loop and
-            // we get stuck in the clientReader.readLine() call.
-            // If anyone knows why, I'd love to know!
-            while (!Objects.equals(content = clientReader.readLine(), "")){
-                if(content.startsWith("Host: ")) {
-                    host = content.split(": ")[1];
-                }
-                else if (content.startsWith("Accept: ")) {
-                    acceptMediaType = content.split(": ")[1];
-                }
-                else if (content.startsWith("User-Agent: ")) {
-                    userAgent = content.split(": ")[1];
-                }
-                else if(content.contains("HTTP")) {
+            // Stop on empty line (end of headers) or null (EOF). We must NOT read past the empty line:
+            // the next read would be the request body; if the client hasn't sent it yet, readLine() blocks forever.
+            while ((content = clientReader.readLine()) != null && !content.isEmpty()) {
+                if (content.contains(": ")) {
+                    String[] kv = content.split(": ", 2);
+                    switch (kv[0]) {
+                        case "Host" -> host = kv[1];
+                        case "Accept" -> acceptMediaType = kv[1];
+                        case "User-Agent" -> userAgent = kv[1];
+                        default -> { /* unknown header, ignore */ }
+                    }
+                } else if (content.contains("HTTP")) {
                     request = content;
                 }
             }
