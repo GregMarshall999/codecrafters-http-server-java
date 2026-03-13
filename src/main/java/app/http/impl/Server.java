@@ -17,9 +17,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 
 public class Server implements Http {
     @Override
@@ -49,26 +47,27 @@ public class Server implements Http {
         try {
             BufferedReader clientReader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
+            String content;
             String host = null;
             String acceptMediaType = null;
             String userAgent = null;
             String request = null;
-            for (int i = 0; i < 10; i++) {
-                String s = clientReader.readLine();
-
-                if (s != null) {
-                    if(s.startsWith("Host: ")) {
-                        host = s.split(": ")[1];
-                    }
-                    else if (s.startsWith("Accept: ")) {
-                        acceptMediaType = s.split(": ")[1];
-                    }
-                    else if (s.startsWith("User-Agent: ")) {
-                        userAgent = s.split(": ")[1];
-                    }
-                    else if(s.contains("HTTP")) {
-                        request = s;
-                    }
+            // README!!!
+            // For some reason if the Reader tries to read anything after the empty string, we get an infinite loop and
+            // we get stuck in the clientReader.readLine() call.
+            // If anyone knows why, I'd love to know!
+            while (!Objects.equals(content = clientReader.readLine(), "")){
+                if(content.startsWith("Host: ")) {
+                    host = content.split(": ")[1];
+                }
+                else if (content.startsWith("Accept: ")) {
+                    acceptMediaType = content.split(": ")[1];
+                }
+                else if (content.startsWith("User-Agent: ")) {
+                    userAgent = content.split(": ")[1];
+                }
+                else if(content.contains("HTTP")) {
+                    request = content;
                 }
             }
 
