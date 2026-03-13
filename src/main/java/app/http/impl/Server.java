@@ -18,6 +18,7 @@ import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Server implements Http {
@@ -71,6 +72,8 @@ public class Server implements Http {
 
             assert request != null;
             String[] requestLine = request.split(" ");
+
+            IO.println(Arrays.toString(requestLine));
 
             return new HttpCall(
                     new Request(HttpMethod.valueOf(requestLine[0]), requestLine[1], requestLine[2]),
