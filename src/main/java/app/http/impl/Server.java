@@ -54,6 +54,8 @@ public class Server implements Http {
                 lines.add(s);
             }
 
+            IO.println(lines);
+
             String[] requestLine = lines.get(0).split(" ");
 
             return new HttpCall(
