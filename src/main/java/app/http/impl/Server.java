@@ -17,6 +17,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Server implements Http {
     @Override
@@ -44,27 +46,19 @@ public class Server implements Http {
     @Override
     public HttpCall parseClientRequest(Socket client) throws ServerException {
         try {
-            BufferedReader clientReader = new BufferedReader(
-                    new InputStreamReader(
-                            client.getInputStream()
-                    )
-            );
+            BufferedReader clientReader = new BufferedReader(new InputStreamReader(client.getInputStream()));
 
-            String clientMessage = clientReader.readLine();
-            String[] request = clientMessage.split("\r\n");
+            List<String> lines = new ArrayList<>();
+            for (int i = 0; i < 4; i++) {
+                String s = clientReader.readLine();
+                lines.add(s);
+            }
 
-            String[] requestLine = request[0].split(" ");
-            String[] headerLine;
-            if(request.length > 1) {
-                 headerLine = new String[] { request[1], request[2], request[3] };
-            }
-            else {
-                headerLine = new String[] { null, null, null };
-            }
+            String[] requestLine = lines.get(0).split(" ");
 
             return new HttpCall(
                     new Request(HttpMethod.valueOf(requestLine[0]), requestLine[1], requestLine[2]),
-                    new Header(headerLine[0], headerLine[1], headerLine[2])
+                    new Header(lines.get(1), lines.get(2), lines.get(3).split(": ")[1])
             );
         } catch (IOException e) {
             throw new ServerException("Failed to parse client request: " + e.getMessage(), Severity.LOW);
@@ -74,7 +68,7 @@ public class Server implements Http {
     @Override
     public void handleClientRequest(HttpCall call, Socket client) throws ServerException {
         ResponseCode code;
-        ContentType contentType = null;
+        ContentType contentType;
         int contentLength = 0;
         String body = null;
 
@@ -90,6 +84,12 @@ public class Server implements Http {
                     code = ResponseCode.OK;
                     contentType = ContentType.TEXT_PLAIN;
                     body = path[2];
+                    contentLength = body.getBytes().length;
+                }
+                case "user-agent" -> {
+                    code = ResponseCode.OK;
+                    contentType = ContentType.TEXT_PLAIN;
+                    body = call.header().userAgent();
                     contentLength = body.getBytes().length;
                 }
                 default -> {
