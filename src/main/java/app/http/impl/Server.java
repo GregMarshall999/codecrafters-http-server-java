@@ -56,24 +56,24 @@ public class Server implements Http {
             for (int i = 0; i < 10; i++) {
                 String s = clientReader.readLine();
 
-                if(s.startsWith("Host: ")) {
-                    host = s.split(": ")[1];
-                }
-                else if (s.startsWith("Accept: ")) {
-                    acceptMediaType = s.split(": ")[1];
-                }
-                else if (s.startsWith("User-Agent: ")) {
-                    userAgent = s.split(": ")[1];
-                }
-                else if(s.contains("HTTP")) {
-                    request = s;
+                if (s != null) {
+                    if(s.startsWith("Host: ")) {
+                        host = s.split(": ")[1];
+                    }
+                    else if (s.startsWith("Accept: ")) {
+                        acceptMediaType = s.split(": ")[1];
+                    }
+                    else if (s.startsWith("User-Agent: ")) {
+                        userAgent = s.split(": ")[1];
+                    }
+                    else if(s.contains("HTTP")) {
+                        request = s;
+                    }
                 }
             }
 
             assert request != null;
             String[] requestLine = request.split(" ");
-
-            IO.println(Arrays.toString(requestLine));
 
             return new HttpCall(
                     new Request(HttpMethod.valueOf(requestLine[0]), requestLine[1], requestLine[2]),
