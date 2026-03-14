@@ -123,6 +123,8 @@ public class Server implements Http {
 
         try {
             client.getOutputStream().write(httpResponse.getBytes());
+            client.getOutputStream().flush();
+            client.close();
         } catch (IOException e) {
             throw new ServerException("Failed to respond: " + e.getMessage(), Severity.LOW);
         }
