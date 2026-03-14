@@ -18,28 +18,20 @@ public class HttpServer {
     }
 
     public static void run() {
-        while(true) {
-            try {
-                ServerSocket serverSocket = new ServerSocket(ServerEnv.PORT);
+        try (ServerSocket serverSocket = new ServerSocket(ServerEnv.PORT)) {
+            HTTP_SERVER.initServerSocket(serverSocket);
+            while (true) {
                 try {
-                    serverSocket = HTTP_SERVER.initServerSocket(serverSocket);
                     Socket clientRequest = HTTP_SERVER.awaitClientRequest(serverSocket);
-
                     Thread.startVirtualThread(() -> handleConnection(clientRequest));
                 } catch (ServerException e) {
                     handleServerException(e);
-                } finally {
-                    if(serverSocket != null && !serverSocket.isClosed()) {
-                        try {
-                            serverSocket.close();
-                        } catch (IOException e) {
-                            IO.println("Failed to close socket: " + e.getMessage());
-                        }
-                    }
                 }
-            } catch (IOException e) {
-                IO.println("Unable to create Server Socket: " + e.getMessage());
             }
+        } catch (IOException e) {
+            IO.println("Unable to create Server Socket: " + e.getMessage());
+        } catch (ServerException e) {
+            handleServerException(e);
         }
     }
 
