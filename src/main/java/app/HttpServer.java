@@ -18,32 +18,47 @@ public class HttpServer {
     }
 
     public static void run() {
-        try {
-            ServerSocket serverSocket = new ServerSocket(ServerEnv.PORT);
+        while(true) {
             try {
-                serverSocket = HTTP_SERVER.initServerSocket(serverSocket);
-                Socket clientRequest = HTTP_SERVER.awaitClientRequest(serverSocket);
-                HttpCall call = HTTP_SERVER.parseClientRequest(clientRequest);
-                HTTP_SERVER.handleClientRequest(call, clientRequest);
-            } catch (ServerException e) {
-                switch (e.getSeverity()) {
-                    case HIGH -> {
-                        IO.println("Major Exception: " + e.getMessage());
-                        System.exit(0);
-                    }
-                    case LOW -> IO.println("Warning: " + e.getMessage());
-                }
-            } finally {
-                if(serverSocket != null && !serverSocket.isClosed()) {
-                    try {
-                        serverSocket.close();
-                    } catch (IOException e) {
-                        IO.println("Failed to close socket: " + e.getMessage());
+                ServerSocket serverSocket = new ServerSocket(ServerEnv.PORT);
+                try {
+                    serverSocket = HTTP_SERVER.initServerSocket(serverSocket);
+                    Socket clientRequest = HTTP_SERVER.awaitClientRequest(serverSocket);
+
+                    Thread.startVirtualThread(() -> handleConnection(clientRequest));
+                } catch (ServerException e) {
+                    handleServerException(e);
+                } finally {
+                    if(serverSocket != null && !serverSocket.isClosed()) {
+                        try {
+                            serverSocket.close();
+                        } catch (IOException e) {
+                            IO.println("Failed to close socket: " + e.getMessage());
+                        }
                     }
                 }
+            } catch (IOException e) {
+                IO.println("Unable to create Server Socket: " + e.getMessage());
             }
-        } catch (IOException e) {
-            IO.println("Unable to create Server Socket: " + e.getMessage());
+        }
+    }
+
+    private static void handleConnection(Socket clientConnection) {
+        try {
+            HttpCall call = HTTP_SERVER.parseClientRequest(clientConnection);
+            HTTP_SERVER.handleClientRequest(call, clientConnection);
+        } catch (ServerException e) {
+            handleServerException(e);
+        }
+    }
+
+    private static void handleServerException(ServerException e) {
+        switch (e.getSeverity()) {
+            case HIGH -> {
+                IO.println("Major Exception: " + e.getMessage());
+                System.exit(0);
+            }
+            case LOW -> IO.println("Warning: " + e.getMessage());
         }
     }
 }
